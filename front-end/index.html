@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redator de Novelas - Bloco de Notas Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Modal de Login */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-overlay.hidden {
+            display: none;
+        }
+        
+        .auth-modal {
+            background: var(--app-bg);
+            padding: 40px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .auth-modal h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-family: var(--font-ui);
+            color: var(--text-primary);
+        }
+        
+        .auth-form input {
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--editor-bg);
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        
+        .auth-form input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+        
+        .auth-form button {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .auth-form button:hover {
+            background: var(--accent-hover);
+        }
+        
+        .auth-toggle {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .auth-toggle a {
+            color: var(--accent-color);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        .auth-error {
+            color: var(--danger);
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        /* Lista de Documentos */
+        .documents-list {
+            margin-top: 20px;
+        }
+        
+        .document-item {
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .document-item:hover {
+            background: var(--sidebar-bg);
+            border-color: var(--accent-color);
+        }
+        
+        .document-item.active {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        .document-item-info h4 {
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+        
+        .document-item-info span {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+        
+        .document-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-small {
+            background: transparent;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-small:hover {
+            opacity: 1;
+        }
+        
+        .new-doc-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+        
+        .new-doc-btn:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+        
+        /* User badge no header */
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--sidebar-bg);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .user-badge button {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .cloud-save-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal de Autenticação -->
+    <div id="auth-modal" class="modal-overlay hidden">
+        <div class="auth-modal">
+            <h2 id="auth-title">Entrar</h2>
+            <div id="auth-error" class="auth-error"></div>
+            <form class="auth-form" id="auth-form">
+                <input type="text" id="auth-username" placeholder="Nome de usuário" required>
+                <input type="email" id="auth-email" placeholder="Email" class="hidden">
+                <input type="password" id="auth-password" placeholder="Senha" required>
+                <button type="submit" id="auth-submit">Entrar</button>
+            </form>
+            <div class="auth-toggle">
+                <span id="auth-toggle-text">Não tem conta? <a id="auth-toggle">Cadastre-se</a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-book-open"></i> Guia do Redator</h2>
+                <button id="toggle-sidebar" class="icon-btn"><i class="fa-solid fa-bars"></i></button>
+            </div>
+            <div class="sidebar-content">
+                <!-- Lista de Documentos na Nuvem -->
+                <div class="accordion-item" id="cloud-docs-section" style="display: none;">
+                    <div class="accordion-header active"><h3><i class="fa-solid fa-cloud"></i> Meus Documentos</h3><i class="fa-solid fa-chevron-down"></i></div>
+                    <div class="accordion-body" style="max-height: 400px; padding: 15px;">
+                        <button class="new-doc-btn" id="new-document"><i class="fa-solid fa-plus"></i> Novo Documento</button>
+                        <div class="documents-list" id="documents-list">
+                            <!-- Documentos serão listados aqui -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <div class="accordion-item active">
+                        <div class="accordion-header"><h3>Estrutura de Escrita</h3><i class="fa-solid fa-chevron-down"></i></div>
+                        <div class="accordion-body">
+                            <ul>
+                                <li><strong>Cena:</strong> Local, Momento, Personagens.</li>
+                                <li><strong>Narrativa:</strong> Sensorial, emoções via ações, ritmo dinâmico.</li>
+                                <li><strong>Diálogos:</strong> Naturais, com subtexto, sem muita exposição.</li>
+                                <li><strong>Conflito:</strong> Tensão (emocional/moral/física), mudança ao final.</li>
+                                <li><strong>Gancho Final:</strong> Revelação, dúvida ou conflito aberto.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <div class="accordion-header"><h3>Contexto da Novela</h3><i class="fa-solid fa-chevron-down"></i></div>
+                        <div class="accordion-body">
+                            <textarea id="context-input" placeholder="Título:&#10;Gênero:&#10;Ambientação:&#10;Tema central:"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header"><h3>Personagens</h3><i class="fa-solid fa-chevron-down"></i></div>
+                        <div class="accordion-body">
+                            <textarea id="characters-input" placeholder="Nome:&#10;Idade:&#10;Personalidade:&#10;Objetivo:&#10;Conflito interno:&#10;Relações importantes:"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Editor -->
+        <main class="editor-main">
+            <header class="editor-header">
+                <div class="header-left">
+                    <button id="mobile-menu-btn" class="icon-btn mobile-only"><i class="fa-solid fa-bars"></i></button>
+                    <button id="desktop-toggle-sidebar" class="icon-btn desktop-only" title="Alternar Sidebar"><i class="fa-solid fa-book-open"></i></button>
+                    <input type="text" id="document-title" class="document-title" placeholder="Nova Cena..." value="Capítulo 1 - A Revelação">
+                </div>
+                <div class="header-right">
+                    <span id="save-status" class="save-status"><i class="fa-solid fa-check"></i> Salvo</span>
+                    <span id="cloud-save-status" class="cloud-save-status hidden"><i class="fa-solid fa-cloud"></i> <small>Salvo na nuvem</small></span>
+                    <div id="user-badge" class="user-badge hidden">
+                        <i class="fa-solid fa-user"></i>
+                        <span id="username-display"></span>
+                        <button id="logout-btn" title="Sair"><i class="fa-solid fa-sign-out-alt"></i></button>
+                    </div>
+                    <button class="action-btn" id="login-trigger" title="Entrar/Cadastrar"><i class="fa-solid fa-user"></i><span> Entrar</span></button>
+                    <button class="action-btn hidden" id="download-txt" title="Baixar como .txt"><i class="fa-solid fa-download"></i><span> Baixar</span></button>
+                    <button class="action-btn danger hidden" id="clear-editor" title="Limpar Tudo"><i class="fa-solid fa-trash"></i><span> Limpar</span></button>
+                    <button class="icon-btn theme-toggle" id="theme-toggle" title="Alternar Tema"><i class="fa-solid fa-moon"></i></button>
+                    <button class="icon-btn" id="voice-btn" title="Ditado por Voz"><i class="fa-solid fa-microphone"></i></button>
+                </div>
+            </header>
+            <div class="editor-wrapper">
+                <textarea id="main-editor" class="main-editor" placeholder="Cena&#10;Local:&#10;Momento do dia:&#10;Personagens presentes:&#10;&#10;[Comece a escrever sua narrativa aqui...]"></textarea>
+            </div>
+        </main>
+    </div>
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
